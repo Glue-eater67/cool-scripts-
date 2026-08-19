@@ -148,19 +148,15 @@ local orig_lh = CFrame.new(-1, -1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0)
 
 local isEmotingZ = false
 local isEmotingE = false
-local isEmotingQ = false
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed then
         if input.KeyCode == Enum.KeyCode.Z then
             isEmotingZ = not isEmotingZ
-            if isEmotingZ then isEmotingE = false; isEmotingQ = false end
+            if isEmotingZ then isEmotingE = false end
         elseif input.KeyCode == Enum.KeyCode.E then
             isEmotingE = not isEmotingE
-            if isEmotingE then isEmotingZ = false; isEmotingQ = false end
-        elseif input.KeyCode == Enum.KeyCode.Q then
-            isEmotingQ = not isEmotingQ
-            if isEmotingQ then isEmotingZ = false; isEmotingE = false end
+            if isEmotingE then isEmotingZ = false end
         end
     end
 end)
@@ -194,13 +190,6 @@ RunService.PreSimulation:Connect(function(dt)
         ls.Transform = ls.Transform:Lerp(orig_ls.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-10), rad(0), rad(-10 + -10 * sin((sine) / 20))) * orig_ls.Rotation, 0.15)
         rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(80), rad(0), rad(20)) * orig_rh.Rotation, 0.15)
         lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(80), rad(0), rad(-20)) * orig_lh.Rotation, 0.15)
-    elseif isEmotingQ then
-        neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_neck.Rotation, 0.15)
-        root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_root.Rotation, 0.15)
-        rs.Transform = rs.Transform:Lerp(orig_rs.Rotation:Inverse() * CFrame.new(0, 0, -1.5 + 0.5 * sin((sine) / 10)) * CFrame.Angles(rad(0), rad(45 * sin((sine) / 10)), rad(-45)) * orig_rs.Rotation, 0.15)
-        ls.Transform = ls.Transform:Lerp(orig_ls.Rotation:Inverse() * CFrame.new(1.5, -1.5, -1) * CFrame.Angles(rad(90), rad(0), rad(0)) * orig_ls.Rotation, 0.15)
-        rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_rh.Rotation, 0.15)
-        lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_lh.Rotation, 0.15)
     elseif fakeHumanoid.MoveDirection.Magnitude > 0.1 then
         neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-20), rad(0), rad(0)) * orig_neck.Rotation, 0.15)
         root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-10), rad(-5 * sin((sine) / 10)), rad(0)) * orig_root.Rotation, 0.15)
