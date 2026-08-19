@@ -132,7 +132,6 @@ player.Character = fakeModel
 camera.CameraSubject = fakeHumanoid
 camera.CameraType = Enum.CameraType.Custom
 
--- 2. Map Real Body Parts to Fake Limbs
 local partMap = {}
 for _, item in ipairs(realCharacter:GetChildren()) do
     if item:IsA("BasePart") then
@@ -158,7 +157,6 @@ if realHumanoid.Health > 0 then
     realHumanoid.Health = 0
 end
 
--- 3. Animation Variables
 local rad, sin = math.rad, math.sin
 local sine = 0
 
@@ -248,7 +246,6 @@ RunService.PreSimulation:Connect(function(dt)
         rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_rh.Rotation, 0.15)
         lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_lh.Rotation, 0.15)
     elseif fakeHumanoid.MoveDirection.Magnitude > 0.1 then
-        -- Custom Run Animation
         neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(20), rad(0), rad(0)) * orig_neck.Rotation, 0.15)
         root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, 4 + 1 * sin((sine) / 20), 0) * CFrame.Angles(rad(-20), rad(0), rad(0)) * orig_root.Rotation, 0.15)
         rs.Transform = rs.Transform:Lerp(orig_rs.Rotation:Inverse() * CFrame.new(0.9, 0.3, -0.1) * CFrame.Angles(rad(20), rad(180), rad(-45)) * orig_rs.Rotation, 0.15)
@@ -256,7 +253,6 @@ RunService.PreSimulation:Connect(function(dt)
         rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0.5, -0.5) * CFrame.Angles(rad(-20), rad(0), rad(0)) * orig_rh.Rotation, 0.15)
         lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-10), rad(0), rad(0)) * orig_lh.Rotation, 0.15)
     else
-        -- Custom Idle Animation
         neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_neck.Rotation, 0.15)
         root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, 4 + 1 * sin((sine) / 20), 0) * CFrame.Angles(rad(0), rad(0), rad(0)) * orig_root.Rotation, 0.15)
         rs.Transform = rs.Transform:Lerp(orig_rs.Rotation:Inverse() * CFrame.new(0.9, 0.3, -0.1) * CFrame.Angles(rad(20), rad(180), rad(-45)) * orig_rs.Rotation, 0.15)
