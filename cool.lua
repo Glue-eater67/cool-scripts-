@@ -56,7 +56,6 @@ local function createPart(name, size, canCollide)
     return part
 end
 
--- Ground collision
 local fakeRoot = createPart("HumanoidRootPart", Vector3.new(2, 2, 1), true)
 fakeRoot.Massless = false
 
@@ -69,7 +68,6 @@ local fakeRL = createPart("Right Leg", Vector3.new(1, 2, 1), false)
 
 fakeRoot.CFrame = realRoot.CFrame
 
--- Attach Motor6D Joints with exact R6 offsets
 local function createMotor(name, part0, part1, c0, c1)
     local motor = Instance.new("Motor6D")
     motor.Name = name
@@ -106,7 +104,6 @@ player.Character = fakeModel
 camera.CameraSubject = fakeHumanoid
 camera.CameraType = Enum.CameraType.Custom
 
--- 2 Map Real Body Parts to Fake Limbs
 local partMap = {}
 for _, item in ipairs(realCharacter:GetChildren()) do
     if item:IsA("BasePart") then
@@ -132,7 +129,6 @@ if realHumanoid.Health > 0 then
     realHumanoid.Health = 0
 end
 
--- 3. Animation Variables
 local sin, cos, rad, abs, exp, floor, noise = math.sin, math.cos, math.rad, math.abs, math.exp, math.floor, math.noise
 local pi = math.pi
 local sine = 0
@@ -187,7 +183,6 @@ RunService.PreSimulation:Connect(function(dt)
     sine += dt * 60
 
     if isEmotingZ then
-        -- Emote Animation (Pressed Z)
         neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-10), rad(0), rad(0)) * orig_neck.Rotation, 0.15)
         root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, 0.5 * sin((sine) / 20), 0) * CFrame.Angles(rad(45), rad(0), rad(0)) * orig_root.Rotation, 0.15)
         rs.Transform = rs.Transform:Lerp(orig_rs.Rotation:Inverse() * CFrame.new(0, 0, 0.5) * CFrame.Angles(rad(180), rad(0), rad(-45)) * orig_rs.Rotation, 0.15)
@@ -195,7 +190,6 @@ RunService.PreSimulation:Connect(function(dt)
         rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(45), rad(0), rad(0)) * orig_rh.Rotation, 0.15)
         lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, 0.3, -0.4) * CFrame.Angles(rad(45), rad(0), rad(30)) * orig_lh.Rotation, 0.15)
     elseif isEmotingE then
-        -- Emote Animation (Pressed E)
         neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(0), rad(0), rad(10 * sin((sine) / 20))) * orig_neck.Rotation, 0.15)
         root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, -2, 0) * CFrame.Angles(rad(10), rad(0), rad(0)) * orig_root.Rotation, 0.15)
         rs.Transform = rs.Transform:Lerp(orig_rs.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-10), rad(0), rad(10 + 10 * sin((sine) / 20))) * orig_rs.Rotation, 0.15)
@@ -203,15 +197,13 @@ RunService.PreSimulation:Connect(function(dt)
         rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(80), rad(0), rad(20)) * orig_rh.Rotation, 0.15)
         lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(80), rad(0), rad(-20)) * orig_lh.Rotation, 0.15)
     elseif isEmotingQ then
-        -- Emote Animation (Pressed Q)
         neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_neck.Rotation, 0.15)
         root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_root.Rotation, 0.15)
         rs.Transform = rs.Transform:Lerp(orig_rs.Rotation:Inverse() * CFrame.new(0, 0, -1.5 + 0.5 * sin((sine) / 10)) * CFrame.Angles(rad(0), rad(45 * sin((sine) / 10)), rad(-45)) * orig_rs.Rotation, 0.15)
         ls.Transform = ls.Transform:Lerp(orig_ls.Rotation:Inverse() * CFrame.new(1.5, -1.5, -1) * CFrame.Angles(rad(90), rad(0), rad(0)) * orig_ls.Rotation, 0.15)
-        rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_rh.Rotation, 0.15)
-        lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_lh.Rotation, 0.15)
+        rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_root.Rotation, 0.15)
+        lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_root.Rotation, 0.15)
     elseif fakeHumanoid.MoveDirection.Magnitude > 0.1 then
-        -- Run Animation
         neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-20), rad(0), rad(0)) * orig_neck.Rotation, 0.15)
         root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-10), rad(-5 * sin((sine) / 10)), rad(0)) * orig_root.Rotation, 0.15)
         rs.Transform = rs.Transform:Lerp(orig_rs.Rotation:Inverse() * CFrame.new(0, 0.1 * sin((sine) / 20), 0) * CFrame.Angles(rad(10), rad(0), rad(0)) * orig_rs.Rotation, 0.15)
@@ -219,7 +211,6 @@ RunService.PreSimulation:Connect(function(dt)
         rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0.5 * sin((sine) / 10), -0.5 * sin((sine) / 10)) * CFrame.Angles(rad(45 * sin((sine) / 10)), rad(0), rad(0)) * orig_rh.Rotation, 0.15)
         lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, -0.5 * sin((sine) / 10), 0.5 * sin((sine) / 10)) * CFrame.Angles(rad(-45 * sin((sine) / 10)), rad(0), rad(0)) * orig_lh.Rotation, 0.15)
     else
-        -- Idle Animation
         neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-20), rad(0), rad(0)) * orig_neck.Rotation, 0.15)
         root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, 0.2 * sin((sine) / 20), 0) * CFrame.Angles(rad(-10), rad(0), rad(0)) * orig_root.Rotation, 0.15)
         rs.Transform = rs.Transform:Lerp(orig_rs.Rotation:Inverse() * CFrame.new(0, 0.1 * sin((sine) / 20), 0) * CFrame.Angles(rad(10), rad(0), rad(0)) * orig_rs.Rotation, 0.15)
@@ -229,7 +220,6 @@ RunService.PreSimulation:Connect(function(dt)
     end
 end)
 
--- 5. Match Real Limbs to Animated Fake Dummy
 RunService.PostSimulation:Connect(function()
     for realPart, fakePart in pairs(partMap) do
         if realPart.Name ~= "HumanoidRootPart" and fakePart and fakePart.Parent then
