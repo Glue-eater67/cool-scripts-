@@ -129,10 +129,8 @@ if realHumanoid.Health > 0 then
     realHumanoid.Health = 0
 end
 
-local sin, cos, rad, abs, exp, floor, noise = math.sin, math.cos, math.rad, math.abs, math.exp, math.floor, math.noise
-local pi = math.pi
+local sin, rad = math.sin, math.rad
 local sine = 0
-local noise_seed = 22443
 
 local neck = fakeTorso:WaitForChild("Neck")
 local root = fakeRoot:WaitForChild("RootJoint")
@@ -201,8 +199,8 @@ RunService.PreSimulation:Connect(function(dt)
         root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_root.Rotation, 0.15)
         rs.Transform = rs.Transform:Lerp(orig_rs.Rotation:Inverse() * CFrame.new(0, 0, -1.5 + 0.5 * sin((sine) / 10)) * CFrame.Angles(rad(0), rad(45 * sin((sine) / 10)), rad(-45)) * orig_rs.Rotation, 0.15)
         ls.Transform = ls.Transform:Lerp(orig_ls.Rotation:Inverse() * CFrame.new(1.5, -1.5, -1) * CFrame.Angles(rad(90), rad(0), rad(0)) * orig_ls.Rotation, 0.15)
-        rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_root.Rotation, 0.15)
-        lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_root.Rotation, 0.15)
+        rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_rh.Rotation, 0.15)
+        lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_lh.Rotation, 0.15)
     elseif fakeHumanoid.MoveDirection.Magnitude > 0.1 then
         neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-20), rad(0), rad(0)) * orig_neck.Rotation, 0.15)
         root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-10), rad(-5 * sin((sine) / 10)), rad(0)) * orig_root.Rotation, 0.15)
