@@ -1,199 +1,240 @@
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
 
-local _junk = 12345; function _junkFunc() return _junk * 9 end
-local v1 = v2:v3(v4("return '\\v5\\v6\\v7\\v8\\v9\\v10\\v11\\v12\\v13\\v9'")())
-local v14 = v2:v3(v4("return '\\v15\\v16\\v17\\v18\\v9\\v10\\v19'")())
-local v20 = v2:v3(v4("return '\\v5\\v9\\v21\\v16\\v12\\v13\\v17\\v22\\v9\\v23\\v8\\v22\\v24\\v10\\v17\\v25\\v9'")())
-local v26 = v2:v3(v4("return '\\v27\\v9\\v28\\v22\\v29\\v30\\v17\\v22\\v8\\v9\\v10\\v11\\v12\\v13\\v9'")())
-local v31 = v2:v3(v4("return '\\v32\\v24\\v10\\v33\\v19\\v21\\v17\\v13\\v9'")())
-local v34 = v2:v3(v4("return '\\v35\\v19\\v9\\v10\\v36\\v7\\v21\\v6\\v22\\v8\\v9\\v10\\v11\\v12\\v13\\v9'")())
-local v37 = v14.v38
-local v39 = v31.v40
-local function v41(v42)
-local v43 = v44(function()
-local v45 = v26:v46(v4("return '\\v27\\v9\\v28\\v22\\v29\\v30\\v17\\v7\\v7\\v9\\v16\\v19'")(), 2)
-if v45 then
-local v47 = v45:v46(v4("return '\\v5\\v48\\v49\\v50\\v9\\v7\\v9\\v10\\v17\\v16'")(), 2)
-if v47 then
-v47:v51(v42)
-return true
+local player = Players.LocalPlayer
+local camera = Workspace.CurrentCamera
+
+local function sendChatMessage(message)
+    local success = pcall(function()
+        local channels = TextChatService:WaitForChild("TextChannels", 2)
+        if channels then
+            local generalChannel = channels:WaitForChild("RBXGeneral", 2)
+            if generalChannel then
+                generalChannel:SendAsync(message)
+                return true
+            end
+        end
+    end)
+    
+    if success then return end
+
+    pcall(function()
+        local chatEvent = ReplicatedStorage:FindFirstChild("SayMessageRequest", true)
+        if chatEvent then
+            chatEvent:FireServer(message, "All")
+        end
+    end)
 end
+
+-- First message in chat
+sendChatMessage("script made by Glue Eater.")
+
+local realCharacter = player.Character or player.CharacterAdded:Wait()
+local realRoot = realCharacter:WaitForChild("HumanoidRootPart")
+local realHumanoid = realCharacter:WaitForChild("Humanoid")
+
+realHumanoid.BreakJointsOnDeath = false
+
+-- 1. Construct R6 fake dummy
+local fakeModel = Instance.new("Model")
+fakeModel.Name = player.Name .. "_FakeRig"
+
+local function createPart(name, size, canCollide)
+    local part = Instance.new("Part")
+    part.Name = name
+    part.Size = size
+    part.Transparency = 1
+    part.CanCollide = canCollide or false
+    part.CanTouch = false
+    part.CanQuery = false
+    part.Massless = true
+    part.Parent = fakeModel
+    return part
 end
+
+-- Ground collision
+local fakeRoot = createPart("HumanoidRootPart", Vector3.new(2, 2, 1), true)
+fakeRoot.Massless = false
+
+local fakeTorso = createPart("Torso", Vector3.new(2, 2, 1), false)
+local fakeHead = createPart("Head", Vector3.new(1, 1, 1), false)
+local fakeLA = createPart("Left Arm", Vector3.new(1, 2, 1), false)
+local fakeRA = createPart("Right Arm", Vector3.new(1, 2, 1), false)
+local fakeLL = createPart("Left Leg", Vector3.new(1, 2, 1), false)
+local fakeRL = createPart("Right Leg", Vector3.new(1, 2, 1), false)
+
+fakeRoot.CFrame = realRoot.CFrame
+
+-- Attach Motor6D Joints with exact R6 offsets
+local function createMotor(name, part0, part1, c0, c1)
+    local motor = Instance.new("Motor6D")
+    motor.Name = name
+    motor.Part0 = part0
+    motor.Part1 = part1
+    motor.C0 = c0
+    motor.C1 = c1
+    motor.Parent = part0
+    return motor
+end
+
+createMotor("RootJoint", fakeRoot, fakeTorso, CFrame.new(0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0), CFrame.new(0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0))
+createMotor("Neck", fakeTorso, fakeHead, CFrame.new(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0), CFrame.new(0, -0.5, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0))
+createMotor("Left Shoulder", fakeTorso, fakeLA, CFrame.new(-1, 0.5, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0), CFrame.new(0.5, 0.5, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0))
+createMotor("Right Shoulder", fakeTorso, fakeRA, CFrame.new(1, 0.5, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0), CFrame.new(-0.5, 0.5, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0))
+createMotor("Left Hip", fakeTorso, fakeLL, CFrame.new(-1, -1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0), CFrame.new(-0.5, 1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0))
+createMotor("Right Hip", fakeTorso, fakeRL, CFrame.new(1, -1, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0), CFrame.new(0.5, 1, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0))
+
+local fakeHumanoid = Instance.new("Humanoid")
+fakeHumanoid.RigType = Enum.HumanoidRigType.R6
+fakeHumanoid.RequiresNeck = false
+fakeHumanoid.HipHeight = 0
+
+fakeHumanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
+fakeHumanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+fakeHumanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+fakeHumanoid:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
+
+fakeHumanoid.Parent = fakeModel
+fakeModel.PrimaryPart = fakeRoot
+fakeModel.Parent = Workspace
+
+player.Character = fakeModel
+camera.CameraSubject = fakeHumanoid
+camera.CameraType = Enum.CameraType.Custom
+
+-- 2 Map Real Body Parts to Fake Limbs
+local partMap = {}
+for _, item in ipairs(realCharacter:GetChildren()) do
+    if item:IsA("BasePart") then
+        for _, joint in ipairs(item:GetJoints()) do
+            if joint:IsA("Motor6D") or joint:IsA("Weld") or joint:IsA("WeldConstraint") then
+                joint:Destroy()
+            end
+        end
+        item.CanCollide = false
+        item.CanTouch = false
+        item.CanQuery = false
+        item.Massless = true
+        item.Anchored = false
+        
+        local matchingFakePart = fakeModel:FindFirstChild(item.Name)
+        if matchingFakePart then
+            partMap[item] = matchingFakePart
+        end
+    end
+end
+
+if realHumanoid.Health > 0 then
+    realHumanoid.Health = 0
+end
+
+-- 3. Animation Variables
+local sin, cos, rad, abs, exp, floor, noise = math.sin, math.cos, math.rad, math.abs, math.exp, math.floor, math.noise
+local pi = math.pi
+local sine = 0
+local noise_seed = 22443
+
+local neck = fakeTorso:WaitForChild("Neck")
+local root = fakeRoot:WaitForChild("RootJoint")
+local rs = fakeTorso:WaitForChild("Right Shoulder")
+local ls = fakeTorso:WaitForChild("Left Shoulder")
+local rh = fakeTorso:WaitForChild("Right Hip")
+local lh = fakeTorso:WaitForChild("Left Hip")
+
+local orig_neck = CFrame.new(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0)
+local orig_root = CFrame.new(0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0)
+local orig_rs = CFrame.new(1, 0.5, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+local orig_ls = CFrame.new(-1, 0.5, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+local orig_rh = CFrame.new(1, -1, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+local orig_lh = CFrame.new(-1, -1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+
+local isEmotingZ = false
+local isEmotingE = false
+local isEmotingQ = false
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed then
+        if input.KeyCode == Enum.KeyCode.Z then
+            isEmotingZ = not isEmotingZ
+            if isEmotingZ then isEmotingE = false; isEmotingQ = false end
+        elseif input.KeyCode == Enum.KeyCode.E then
+            isEmotingE = not isEmotingE
+            if isEmotingE then isEmotingZ = false; isEmotingQ = false end
+        elseif input.KeyCode == Enum.KeyCode.Q then
+            isEmotingQ = not isEmotingQ
+            if isEmotingQ then isEmotingZ = false; isEmotingE = false end
+        end
+    end
 end)
-if v43 then return end
-v44(function()
-local v52 = v20:v53(v4("return '\\v8\\v17\\v18\\v54\\v9\\v19\\v19\\v17\\v25\\v9\\v5\\v9\\v55\\v6\\v9\\v19\\v22'")(), true)
-if v52 then
-v52:v56(v42, v4("return '\\v57\\v16\\v16'")())
-end
+
+RunService.PreSimulation:Connect(function(dt)
+    for realPart, _ in pairs(partMap) do
+        realPart.CanCollide = false
+        realPart.CanTouch = false
+        realPart.CanQuery = false
+    end
+
+    if realRoot and realRoot.Parent and fakeRoot and fakeRoot.Parent then
+        realRoot.CFrame = fakeRoot.CFrame
+        realRoot.AssemblyLinearVelocity = Vector3.zero
+        realRoot.AssemblyAngularVelocity = Vector3.zero
+    end
+
+    sine += dt * 60
+
+    if isEmotingZ then
+        -- Emote Animation (Pressed Z)
+        neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-10), rad(0), rad(0)) * orig_neck.Rotation, 0.15)
+        root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, 0.5 * sin((sine) / 20), 0) * CFrame.Angles(rad(45), rad(0), rad(0)) * orig_root.Rotation, 0.15)
+        rs.Transform = rs.Transform:Lerp(orig_rs.Rotation:Inverse() * CFrame.new(0, 0, 0.5) * CFrame.Angles(rad(180), rad(0), rad(-45)) * orig_rs.Rotation, 0.15)
+        ls.Transform = ls.Transform:Lerp(orig_ls.Rotation:Inverse() * CFrame.new(0, 0, 0.5) * CFrame.Angles(rad(180), rad(0), rad(45)) * orig_ls.Rotation, 0.15)
+        rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(45), rad(0), rad(0)) * orig_rh.Rotation, 0.15)
+        lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, 0.3, -0.4) * CFrame.Angles(rad(45), rad(0), rad(30)) * orig_lh.Rotation, 0.15)
+    elseif isEmotingE then
+        -- Emote Animation (Pressed E)
+        neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(0), rad(0), rad(10 * sin((sine) / 20))) * orig_neck.Rotation, 0.15)
+        root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, -2, 0) * CFrame.Angles(rad(10), rad(0), rad(0)) * orig_root.Rotation, 0.15)
+        rs.Transform = rs.Transform:Lerp(orig_rs.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-10), rad(0), rad(10 + 10 * sin((sine) / 20))) * orig_rs.Rotation, 0.15)
+        ls.Transform = ls.Transform:Lerp(orig_ls.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-10), rad(0), rad(-10 + -10 * sin((sine) / 20))) * orig_ls.Rotation, 0.15)
+        rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(80), rad(0), rad(20)) * orig_rh.Rotation, 0.15)
+        lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(80), rad(0), rad(-20)) * orig_lh.Rotation, 0.15)
+    elseif isEmotingQ then
+        -- Emote Animation (Pressed Q)
+        neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_neck.Rotation, 0.15)
+        root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_root.Rotation, 0.15)
+        rs.Transform = rs.Transform:Lerp(orig_rs.Rotation:Inverse() * CFrame.new(0, 0, -1.5 + 0.5 * sin((sine) / 10)) * CFrame.Angles(rad(0), rad(45 * sin((sine) / 10)), rad(-45)) * orig_rs.Rotation, 0.15)
+        ls.Transform = ls.Transform:Lerp(orig_ls.Rotation:Inverse() * CFrame.new(1.5, -1.5, -1) * CFrame.Angles(rad(90), rad(0), rad(0)) * orig_ls.Rotation, 0.15)
+        rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_rh.Rotation, 0.15)
+        lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, 0, 0) * orig_lh.Rotation, 0.15)
+    elseif fakeHumanoid.MoveDirection.Magnitude > 0.1 then
+        -- Run Animation
+        neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-20), rad(0), rad(0)) * orig_neck.Rotation, 0.15)
+        root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-10), rad(-5 * sin((sine) / 10)), rad(0)) * orig_root.Rotation, 0.15)
+        rs.Transform = rs.Transform:Lerp(orig_rs.Rotation:Inverse() * CFrame.new(0, 0.1 * sin((sine) / 20), 0) * CFrame.Angles(rad(10), rad(0), rad(0)) * orig_rs.Rotation, 0.15)
+        ls.Transform = ls.Transform:Lerp(orig_ls.Rotation:Inverse() * CFrame.new(0, 0.1 * sin((sine) / 20), 0) * CFrame.Angles(rad(10), rad(0), rad(0)) * orig_ls.Rotation, 0.15)
+        rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, 0.5 * sin((sine) / 10), -0.5 * sin((sine) / 10)) * CFrame.Angles(rad(45 * sin((sine) / 10)), rad(0), rad(0)) * orig_rh.Rotation, 0.15)
+        lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, -0.5 * sin((sine) / 10), 0.5 * sin((sine) / 10)) * CFrame.Angles(rad(-45 * sin((sine) / 10)), rad(0), rad(0)) * orig_lh.Rotation, 0.15)
+    else
+        -- Idle Animation
+        neck.Transform = neck.Transform:Lerp(orig_neck.Rotation:Inverse() * CFrame.new(0, 0, 0) * CFrame.Angles(rad(-20), rad(0), rad(0)) * orig_neck.Rotation, 0.15)
+        root.Transform = root.Transform:Lerp(orig_root.Rotation:Inverse() * CFrame.new(0, 0.2 * sin((sine) / 20), 0) * CFrame.Angles(rad(-10), rad(0), rad(0)) * orig_root.Rotation, 0.15)
+        rs.Transform = rs.Transform:Lerp(orig_rs.Rotation:Inverse() * CFrame.new(0, 0.1 * sin((sine) / 20), 0) * CFrame.Angles(rad(10), rad(0), rad(0)) * orig_rs.Rotation, 0.15)
+        ls.Transform = ls.Transform:Lerp(orig_ls.Rotation:Inverse() * CFrame.new(0, 0.1 * sin((sine) / 20), 0) * CFrame.Angles(rad(10), rad(0), rad(0)) * orig_ls.Rotation, 0.15)
+        rh.Transform = rh.Transform:Lerp(orig_rh.Rotation:Inverse() * CFrame.new(0, -0.2 * sin((sine) / 20), -0.3 + 0.3 * sin((sine) / 20)) * CFrame.Angles(rad(10 + 5 * sin((sine) / 20)), rad(0), rad(0)) * orig_rh.Rotation, 0.15)
+        lh.Transform = lh.Transform:Lerp(orig_lh.Rotation:Inverse() * CFrame.new(0, -0.2 * sin((sine) / 20), -0.3 + 0.3 * sin((sine) / 20)) * CFrame.Angles(rad(10 + 5 * sin((sine) / 20)), rad(0), rad(0)) * orig_lh.Rotation, 0.15)
+    end
 end)
-end
-v41(v4("return '\\v19\\v13\\v10\\v12\\v21\\v22\\v58\\v59\\v17\\v23\\v9\\v58\\v60\\v18\\v58\\v50\\v16\\v6\\v9\\v58\\v61\\v17\\v22\\v9\\v10\\v62'")())
-local v63 = v37.v64 or v37.v65:v66()
-local v67 = v63:v46(v4("return '\\v68\\v6\\v59\\v17\\v7\\v24\\v12\\v23\\v5\\v24\\v24\\v22\\v15\\v17\\v10\\v22'")())
-local v69 = v63:v46(v4("return '\\v68\\v6\\v59\\v17\\v7\\v24\\v12\\v23'")())
-v69.v70 = false
-local v71 = v72.v73(v4("return '\\v54\\v24\\v23\\v9\\v16'")())
-v71.v74 = v37.v74 .. v4("return '\\v75\\v76\\v17\\v33\\v9\\v5\\v12\\v25'")()
-local function v77(v78, v79, v80)
-local v81 = v72.v73(v4("return '\\v15\\v17\\v10\\v22'")())
-v81.v74 = v78
-v81.v82 = v79
-v81.v83 = 1
-v81.v84 = v80 or false
-v81.v85 = false
-v81.v86 = false
-v81.v87 = true
-v81.v88 = v71
-return v81
-end
-local v89 = v77(v4("return '\\v68\\v6\\v59\\v17\\v7\\v24\\v12\\v23\\v5\\v24\\v24\\v22\\v15\\v17\\v10\\v22'")(), v90.v73(2, 2, 1), true)
-v89.v87 = false
-local v91 = v77(v4("return '\\v27\\v24\\v10\\v19\\v24'")(), v90.v73(2, 2, 1), false)
-local v92 = v77(v4("return '\\v68\\v9\\v17\\v23'")(), v90.v73(1, 1, 1), false)
-local v93 = v77(v4("return '\\v94\\v9\\v95\\v22\\v58\\v57\\v10\\v59'")(), v90.v73(1, 2, 1), false)
-local v96 = v77(v4("return '\\v5\\v12\\v25\\v30\\v22\\v58\\v57\\v10\\v59'")(), v90.v73(1, 2, 1), false)
-local v97 = v77(v4("return '\\v94\\v9\\v95\\v22\\v58\\v94\\v9\\v25'")(), v90.v73(1, 2, 1), false)
-local v98 = v77(v4("return '\\v5\\v12\\v25\\v30\\v22\\v58\\v94\\v9\\v25'")(), v90.v73(1, 2, 1), false)
-v89.v99 = v67.v99
-local function v100(v78, v101, v102, v103, v104)
-local v105 = v72.v73(v4("return '\\v54\\v24\\v22\\v24\\v10\\v106\\v107'")())
-v105.v74 = v78
-v105.v108 = v101
-v105.v109 = v102
-v105.v110 = v103
-v105.v111 = v104
-v105.v88 = v101
-return v105
-end
-v100(v4("return '\\v5\\v24\\v24\\v22\\v112\\v24\\v12\\v7\\v22'")(), v89, v91, v99.v73(0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0), v99.v73(0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0))
-v100(v4("return '\\v113\\v9\\v13\\v33'")(), v91, v92, v99.v73(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0), v99.v73(0, -0.5, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0))
-v100(v4("return '\\v94\\v9\\v95\\v22\\v58\\v8\\v30\\v24\\v6\\v16\\v23\\v9\\v10'")(), v91, v93, v99.v73(-1, 0.5, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0), v99.v73(0.5, 0.5, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0))
-v100(v4("return '\\v5\\v12\\v25\\v30\\v22\\v58\\v8\\v30\\v24\\v6\\v16\\v23\\v9\\v10'")(), v91, v96, v99.v73(1, 0.5, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0), v99.v73(-0.5, 0.5, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0))
-v100(v4("return '\\v94\\v9\\v95\\v22\\v58\\v68\\v12\\v21'")(), v91, v97, v99.v73(-1, -1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0), v99.v73(-0.5, 1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0))
-v100(v4("return '\\v5\\v12\\v25\\v30\\v22\\v58\\v68\\v12\\v21'")(), v91, v98, v99.v73(1, -1, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0), v99.v73(0.5, 1, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0))
-local v114 = v72.v73(v4("return '\\v68\\v6\\v59\\v17\\v7\\v24\\v12\\v23'")())
-v114.v115 = v116.v117.v118
-v114.v119 = false
-v114.v120 = 0
-v114:v121(v116.v122.v123, false)
-v114:v121(v116.v122.v124, false)
-v114:v121(v116.v122.v125, false)
-v114:v121(v116.v122.v126, false)
-v114.v88 = v71
-v71.v127 = v89
-v71.v88 = v31
-v37.v64 = v71
-v39.v128 = v114
-v39.v129 = v116.v129.v130
-local v131 = {}
-for v132, v133 in v134(v63:v135()) do
-if v133:v136(v4("return '\\v48\\v17\\v19\\v9\\v15\\v17\\v10\\v22'")()) then
-for v132, v137 in v134(v133:v138()) do
-if v137:v136(v4("return '\\v54\\v24\\v22\\v24\\v10\\v106\\v107'")()) or v137:v136(v4("return '\\v32\\v9\\v16\\v23'")()) or v137:v136(v4("return '\\v32\\v9\\v16\\v23\\v29\\v24\\v7\\v19\\v22\\v10\\v17\\v12\\v7\\v22'")()) then
-v137:v139()
-end
-end
-v133.v84 = false
-v133.v85 = false
-v133.v86 = false
-v133.v87 = true
-v133.v140 = false
-local v141 = v71:v53(v133.v74)
-if v141 then
-v131[v133] = v141
-end
-end
-end
-if v69.v142 > 0 then
-v69.v142 = 0
-end
-local v143, v144, v145, v146, v147, v148, v149 = v150.v143, v150.v144, v150.v145, v150.v146, v150.v147, v150.v148, v150.v149
-local v151 = v150.v151
-local v152 = 0
-local v153 = 22443
-local v154 = v91:v46(v4("return '\\v113\\v9\\v13\\v33'")())
-local v155 = v89:v46(v4("return '\\v5\\v24\\v24\\v22\\v112\\v24\\v12\\v7\\v22'")())
-local v156 = v91:v46(v4("return '\\v5\\v12\\v25\\v30\\v22\\v58\\v8\\v30\\v24\\v6\\v16\\v23\\v9\\v10'")())
-local v157 = v91:v46(v4("return '\\v94\\v9\\v95\\v22\\v58\\v8\\v30\\v24\\v6\\v16\\v23\\v9\\v10'")())
-local v158 = v91:v46(v4("return '\\v5\\v12\\v25\\v30\\v22\\v58\\v68\\v12\\v21'")())
-local v159 = v91:v46(v4("return '\\v94\\v9\\v95\\v22\\v58\\v68\\v12\\v21'")())
-local v160 = v99.v73(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0)
-local v161 = v99.v73(0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0)
-local v162 = v99.v73(1, 0.5, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0)
-local v163 = v99.v73(-1, 0.5, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0)
-local v164 = v99.v73(1, -1, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0)
-local v165 = v99.v73(-1, -1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0)
-local v166 = false
-local v167 = false
-local v168 = false
-v34.v169:v170(function(v171, v172)
-if not v172 then
-if v171.v173 == v116.v173.v174 then
-v166 = not v166
-if v166 then v167 = false; v168 = false end
-elseif v171.v173 == v116.v173.v175 then
-v167 = not v167
-if v167 then v166 = false; v168 = false end
-elseif v171.v173 == v116.v173.v176 then
-v168 = not v168
-if v168 then v166 = false; v167 = false end
-end
-end
-end)
-v1.v177:v170(function(v178)
-for v179, v132 in v180(v131) do
-v179.v84 = false
-v179.v85 = false
-v179.v86 = false
-end
-if v67 and v67.v88 and v89 and v89.v88 then
-v67.v99 = v89.v99
-v67.v181 = v90.v182
-v67.v183 = v90.v182
-end
-v152 += v178 * 60
-if v166 then
-v154.v184 = v154.v184:v185(v160.v186:v187() * v99.v73(0, 0, 0) * v99.v188(v145(-10), v145(0), v145(0)) * v160.v186, 0.15)
-v155.v184 = v155.v184:v185(v161.v186:v187() * v99.v73(0, 0.5 * v143((v152) / 20), 0) * v99.v188(v145(45), v145(0), v145(0)) * v161.v186, 0.15)
-v156.v184 = v156.v184:v185(v162.v186:v187() * v99.v73(0, 0, 0.5) * v99.v188(v145(180), v145(0), v145(-45)) * v162.v186, 0.15)
-v157.v184 = v157.v184:v185(v163.v186:v187() * v99.v73(0, 0, 0.5) * v99.v188(v145(180), v145(0), v145(45)) * v163.v186, 0.15)
-v158.v184 = v158.v184:v185(v164.v186:v187() * v99.v73(0, 0, 0) * v99.v188(v145(45), v145(0), v145(0)) * v164.v186, 0.15)
-v159.v184 = v159.v184:v185(v165.v186:v187() * v99.v73(0, 0.3, -0.4) * v99.v188(v145(45), v145(0), v145(30)) * v165.v186, 0.15)
-elseif v167 then
-v154.v184 = v154.v184:v185(v160.v186:v187() * v99.v73(0, 0, 0) * v99.v188(v145(0), v145(0), v145(10 * v143((v152) / 20))) * v160.v186, 0.15)
-v155.v184 = v155.v184:v185(v161.v186:v187() * v99.v73(0, -2, 0) * v99.v188(v145(10), v145(0), v145(0)) * v161.v186, 0.15)
-v156.v184 = v156.v184:v185(v162.v186:v187() * v99.v73(0, 0, 0) * v99.v188(v145(-10), v145(0), v145(10 + 10 * v143((v152) / 20))) * v162.v186, 0.15)
-v157.v184 = v157.v184:v185(v163.v186:v187() * v99.v73(0, 0, 0) * v99.v188(v145(-10), v145(0), v145(-10 + -10 * v143((v152) / 20))) * v163.v186, 0.15)
-v158.v184 = v158.v184:v185(v164.v186:v187() * v99.v73(0, 0, 0) * v99.v188(v145(80), v145(0), v145(20)) * v164.v186, 0.15)
-v159.v184 = v159.v184:v185(v165.v186:v187() * v99.v73(0, 0, 0) * v99.v188(v145(80), v145(0), v145(-20)) * v165.v186, 0.15)
-elseif v168 then
-v154.v184 = v154.v184:v185(v160.v186:v187() * v99.v73(0, 0, 0) * v160.v186, 0.15)
-v155.v184 = v155.v184:v185(v161.v186:v187() * v99.v73(0, 0, 0) * v161.v186, 0.15)
-v156.v184 = v156.v184:v185(v162.v186:v187() * v99.v73(0, 0, -1.5 + 0.5 * v143((v152) / 10)) * v99.v188(v145(0), v145(45 * v143((v152) / 10)), v145(-45)) * v162.v186, 0.15)
-v157.v184 = v157.v184:v185(v163.v186:v187() * v99.v73(1.5, -1.5, -1) * v99.v188(v145(90), v145(0), v145(0)) * v163.v186, 0.15)
-v158.v184 = v158.v184:v185(v164.v186:v187() * v99.v73(0, 0, 0) * v164.v186, 0.15)
-v159.v184 = v159.v184:v185(v165.v186:v187() * v99.v73(0, 0, 0) * v165.v186, 0.15)
-elseif v114.v189.v190 > 0.1 then
-v154.v184 = v154.v184:v185(v160.v186:v187() * v99.v73(0, 0, 0) * v99.v188(v145(-20), v145(0), v145(0)) * v160.v186, 0.15)
-v155.v184 = v155.v184:v185(v161.v186:v187() * v99.v73(0, 0, 0) * v99.v188(v145(-10), v145(-5 * v143((v152) / 10)), v145(0)) * v161.v186, 0.15)
-v156.v184 = v156.v184:v185(v162.v186:v187() * v99.v73(0, 0.1 * v143((v152) / 20), 0) * v99.v188(v145(10), v145(0), v145(0)) * v162.v186, 0.15)
-v157.v184 = v157.v184:v185(v163.v186:v187() * v99.v73(0, 0.1 * v143((v152) / 20), 0) * v99.v188(v145(10), v145(0), v145(0)) * v163.v186, 0.15)
-v158.v184 = v158.v184:v185(v164.v186:v187() * v99.v73(0, 0.5 * v143((v152) / 10), -0.5 * v143((v152) / 10)) * v99.v188(v145(45 * v143((v152) / 10)), v145(0), v145(0)) * v164.v186, 0.15)
-v159.v184 = v159.v184:v185(v165.v186:v187() * v99.v73(0, -0.5 * v143((v152) / 10), 0.5 * v143((v152) / 10)) * v99.v188(v145(-45 * v143((v152) / 10)), v145(0), v145(0)) * v165.v186, 0.15)
-else
-v154.v184 = v154.v184:v185(v160.v186:v187() * v99.v73(0, 0, 0) * v99.v188(v145(-20), v145(0), v145(0)) * v160.v186, 0.15)
-v155.v184 = v155.v184:v185(v161.v186:v187() * v99.v73(0, 0.2 * v143((v152) / 20), 0) * v99.v188(v145(-10), v145(0), v145(0)) * v161.v186, 0.15)
-v156.v184 = v156.v184:v185(v162.v186:v187() * v99.v73(0, 0.1 * v143((v152) / 20), 0) * v99.v188(v145(10), v145(0), v145(0)) * v162.v186, 0.15)
-v157.v184 = v157.v184:v185(v163.v186:v187() * v99.v73(0, 0.1 * v143((v152) / 20), 0) * v99.v188(v145(10), v145(0), v145(0)) * v163.v186, 0.15)
-v158.v184 = v158.v184:v185(v164.v186:v187() * v99.v73(0, -0.2 * v143((v152) / 20), -0.3 + 0.3 * v143((v152) / 20)) * v99.v188(v145(10 + 5 * v143((v152) / 20)), v145(0), v145(0)) * v164.v186, 0.15)
-v159.v184 = v159.v184:v185(v165.v186:v187() * v99.v73(0, -0.2 * v143((v152) / 20), -0.3 + 0.3 * v143((v152) / 20)) * v99.v188(v145(10 + 5 * v143((v152) / 20)), v145(0), v145(0)) * v165.v186, 0.15)
-end
-end)
-v1.v191:v170(function()
-for v179, v192 in v180(v131) do
-if v179.v74 ~= v4("return '\\v68\\v6\\v59\\v17\\v7\\v24\\v12\\v23\\v5\\v24\\v24\\v22\\v15\\v17\\v10\\v22'")() and v192 and v192.v88 then
-v179.v181 = v90.v73(0, 30, 0)
-v179.v99 = v192.v99
-end
-end
+
+-- 5. Match Real Limbs to Animated Fake Dummy
+RunService.PostSimulation:Connect(function()
+    for realPart, fakePart in pairs(partMap) do
+        if realPart.Name ~= "HumanoidRootPart" and fakePart and fakePart.Parent then
+            realPart.AssemblyLinearVelocity = Vector3.new(0, 30, 0)
+            realPart.CFrame = fakePart.CFrame
+        end
+    end
 end)
